@@ -45,9 +45,11 @@ Updates the accounts balances.
 Accounts._updateBalance = function(){
     _.each(Accounts.find().fetch(), function(account){
         web3.eth.getBalance(account.address, function(err, res){
-            Accounts.update(account._id, {$set: {
-                balance: res.toString(10)
-            }});
+            if(!err) {
+                Accounts.update(account._id, {$set: {
+                    balance: res.toString(10)
+                }});
+            }
         });
     });
 }
