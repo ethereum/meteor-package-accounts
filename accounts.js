@@ -106,6 +106,77 @@ Accounts._addAccounts = function(){
         });
     });
 };
+Accounts._find = Accounts.find;
+Accounts._findOne = Accounts.findOne;
+Accounts._update = Accounts.update;
+// Accounts._remove = Accounts.remove;
+
+
+/**
+Builds the query with the addition of "{deactivated: {$exists: false}}"
+
+@method _addToQuery
+@param {Mixed} arg
+@return {Object} The query
+*/
+Accounts._addToQuery = function(args){
+    var args = Array.prototype.slice.call(args);
+
+    if(_.isObject(args[0]))
+        args[0] = _.extend(args[0], {deactivated: {$exists: false}});
+    else if(_.isString(args[0]))
+        args[0] = {_id: args[0], deactivated: {$exists: false}};
+    else
+        args[0] = {deactivated: {$exists: false}};
+
+    return args;
+};
+
+/**
+Find all accounts, besides the deactivated ones
+
+@method find
+@return {Object} cursor
+*/
+Accounts.find = function(){    
+    return this._find.apply(this, this._addToQuery(arguments));
+};
+
+/**
+Find one accounts, besides the deactivated ones
+
+@method findOne
+@return {Object} cursor
+*/
+Accounts.findOne = function(){
+    return this._findOne.apply(this, this._addToQuery(arguments));
+};
+
+/**
+Find all accounts, including the deactivated ones
+
+@method findAll
+@return {Object} cursor
+*/
+Accounts.findAll = Accounts._find;
+
+/**
+Update accounts, besides the deactivated ones
+
+@method update
+@return {Object} cursor
+*/
+Accounts.update = function(){
+    return this._update.apply(this, this._addToQuery(arguments));
+};
+
+/**
+Update accounts, including the deactivated ones
+
+@method updateAll
+@return {Object} cursor
+*/
+Accounts.updateAll = Accounts._update;
 
 /**
 Starts fetching and watching the accounts
