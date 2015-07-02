@@ -10,7 +10,7 @@ and will later revivie it when its present in the node again.
 ## Usage
 
 Simply use the global `Accounts` object like any other minimongo collection.
-It provides the `.find()`, `.findOen()`, `.update()` and `.remove()` funcitons.
+It provides the `.find()`, `.findOne()`, `.update()` and `.remove()` functions.
 
 To make sure the accounts get only updated once you have a working etheruem connection, you need specifically call:
 
