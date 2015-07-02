@@ -18,7 +18,7 @@ Accounts.init();
 ```
 
 Then simply use the global `Accounts` object like any other minimongo collection.
-It provides the `.find()`, `.findOne()`, `.findAll()`, `.update()` and `.remove()` functions e.g.:
+It provides the `.find()`, `.findOne()`, `.findAll()`, `.update()`, `.updateAll()` and `.remove()` functions e.g.:
 
 ```js
 // Get all active accounts
