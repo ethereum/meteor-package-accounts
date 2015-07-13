@@ -43,10 +43,10 @@ Updates the accounts balances.
 @method _updateBalance
 */
 Accounts._updateBalance = function(){
-    _.each(Accounts.find().fetch(), function(account){
+    _.each(Accounts.findAll().fetch(), function(account){
         web3.eth.getBalance(account.address, function(err, res){
             if(!err) {
-                Accounts.update(account._id, {$set: {
+                Accounts.updateAll(account._id, {$set: {
                     balance: res.toString(10)
                 }});
             }
@@ -64,22 +64,24 @@ Accounts._addAccounts = function(){
 
     // UPDATE normal accounts on start
     web3.eth.getAccounts(function(e, accounts){
-        var localAccounts = Accounts.find().fetch();
+        var localAccounts = Accounts.findAll().fetch();
 
-        if(_.difference(_.pluck(localAccounts, 'address'), accounts).length === 0)
+
+        if(_.difference(accounts, _.pluck(localAccounts, 'address')).length === 0)
             return;
+
 
         // if the accounts are different, update the local ones
         _.each(localAccounts, function(account){
             // set status deactivated, if it seem to be gone
             if(!_.contains(accounts, account.address)) {
-                Accounts.update(account._id, {$set: {
+                Accounts.updateAll(account._id, {$set: {
                     deactivated: true
                 }});
             } else {
                 web3.eth.getBalance(account.address, function(e, balance){
                     if(!e) {
-                        Accounts.update(account._id, {$set: {
+                        Accounts.updateAll(account._id, {$set: {
                             balance: balance.toString(10)
                         }, $unset: {
                             deactivated: ''

@@ -5,7 +5,7 @@ callback-hook@1.0.3
 check@1.0.5
 ddp@1.1.0
 ejson@1.0.6
-ethereum:accounts@0.1.5
+ethereum:accounts@0.1.6
 ethereum:web3@0.7.1
 frozeman:persistent-minimongo@0.1.3
 geojson-utils@1.0.3
