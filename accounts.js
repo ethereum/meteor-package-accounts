@@ -12,7 +12,7 @@ The accounts collection, with some ethereum additions.
 @constructor
 */
 
-Accounts = new Mongo.Collection('accounts', {connection: null});
+Accounts = new Mongo.Collection('ethereum_accounts', {connection: null});
 new PersistentMinimongo(Accounts);
 
 
