@@ -64,12 +64,11 @@ Accounts._addAccounts = function(){
 
     // UPDATE normal accounts on start
     web3.eth.getAccounts(function(e, accounts){
-        var localAccounts = Accounts.findAll().fetch();
 
-
-        if(_.difference(accounts, _.pluck(localAccounts, 'address')).length === 0)
+        if(_.difference(accounts, _.pluck(Accounts.find().fetch(), 'address')).length === 0)
             return;
 
+        var localAccounts = Accounts.findAll().fetch();
 
         // if the accounts are different, update the local ones
         _.each(localAccounts, function(account){
@@ -196,5 +195,10 @@ Accounts.init = function(){
             _this._updateBalance();
             _this._watchBalance();
         }
+
+        // check for new accounts every 2s
+        setInterval(function(){
+            _this._addAccounts();
+        }, 2000);
     });
 };
