@@ -1,28 +1,31 @@
 # Ethereum accounts
 
-Provides you with an `Accounts` collection, where balances are automatically updated.
+Provides you with an `EthAccounts` collection, where balances are automatically updated.
 Additionally the accounts are persisted in localstorage.
 
 If the ethereum node removes accounts,
-the Accounts collection will set the `deactivated: true` property to these accounts and hide them from normal queries.
+the `EthAccounts` collection will set the `deactivated: true` property to these accounts and hide them from normal queries.
 
 If the Accounts should reapear in the node (e.g. the user importet those, or mist allwed them access), they will be available again,
 including all the extra properties you've set.
+
+**Note** don't use the `EthAccounts` collection to add your own custom accounts as a reload of your application,
+or any change in `web3.eth.accounts` would hide them.
 
 ## Usage
 
 Initialize Accounts on the start of your application, as soon as you have a ethereum connection:
 
 ```js
-Accounts.init();
+EthAccounts.init();
 ```
 
-Then simply use the global `Accounts` object like any other minimongo collection.
+Then simply use the global `EthAccounts` object like any other minimongo collection.
 It provides the `.find()`, `.findOne()`, `.findAll()`, `.update()`, `.updateAll()` and `.remove()` functions e.g.:
 
 ```js
 // Get all active accounts
-var myAccounts = Accounts.find().fetch();
+var myAccounts = EthAccounts.find().fetch();
 
 [
   {
@@ -34,13 +37,13 @@ var myAccounts = Accounts.find().fetch();
 ]
 
 // or
-var myPrimaryAccount = Accounts.findOne({name: 'Coinbase'});
+var myPrimaryAccount = EthAccounts.findOne({name: 'Coinbase'});
 ```
 
 #### If you want to get truly all accounts including the deactivated ones use:
 
 ```js
-var allAccounts = Accounts.findAll().fetch();
+var allAccounts = EthAccounts.findAll().fetch();
 
 [
   {
@@ -63,11 +66,11 @@ var allAccounts = Accounts.findAll().fetch();
 #### If you want to update a deactivated account use:
 
 ```js
-Accounts.updateAll({address: "0x990ccf8a0de58091c028d6ff76bb235ee67c1c39"}, {name: 'XYZ'}});
+EthAccounts.updateAll({address: "0x990ccf8a0de58091c028d6ff76bb235ee67c1c39"}, {name: 'XYZ'}});
 ```
 
 #### If you manually want to activate an account to make it visible call:
 
 ```js
-Accounts.updateAll({address: "0x990ccf8a0de58091c028d6ff76bb235ee67c1c39"}, {$unset: {deactivated: ''}})
+EthAccounts.updateAll({address: "0x990ccf8a0de58091c028d6ff76bb235ee67c1c39"}, {$unset: {deactivated: ''}})
 ```

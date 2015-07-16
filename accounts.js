@@ -8,22 +8,22 @@
 /**
 The accounts collection, with some ethereum additions.
 
-@class Accounts
+@class EthAccounts
 @constructor
 */
 
-Accounts = new Mongo.Collection('ethereum_accounts', {connection: null});
-new PersistentMinimongo(Accounts);
+EthAccounts = new Mongo.Collection('ethereum_accounts', {connection: null});
+new PersistentMinimongo(EthAccounts);
 
 
-Accounts.watching = false;
+EthAccounts.watching = false;
 
 /**
 Updates the accounts balances, by watching for new blocks and checking the balance.
 
 @method _watchBalance
 */
-Accounts._watchBalance = function(){
+EthAccounts._watchBalance = function(){
     var _this = this;
 
     this.watching = true;
@@ -42,11 +42,11 @@ Updates the accounts balances.
 
 @method _updateBalance
 */
-Accounts._updateBalance = function(){
-    _.each(Accounts.findAll().fetch(), function(account){
+EthAccounts._updateBalance = function(){
+    _.each(EthAccounts.findAll().fetch(), function(account){
         web3.eth.getBalance(account.address, function(err, res){
             if(!err) {
-                Accounts.updateAll(account._id, {$set: {
+                EthAccounts.updateAll(account._id, {$set: {
                     balance: res.toString(10)
                 }});
             }
@@ -60,27 +60,30 @@ if its finds a difference between the accounts in the collection and the account
 
 @method _addAccounts
 */
-Accounts._addAccounts = function(){
+EthAccounts._addAccounts = function(){
 
     // UPDATE normal accounts on start
     web3.eth.getAccounts(function(e, accounts){
+        var visibleAccounts = _.pluck(EthAccounts.find().fetch(), 'address');
 
-        if(_.difference(accounts, _.pluck(Accounts.find().fetch(), 'address')).length === 0)
+        if(!_.isEmpty(accounts) &&
+            _.difference(accounts, visibleAccounts).length === 0 &&
+            _.difference(visibleAccounts, accounts).length === 0)
             return;
 
-        var localAccounts = Accounts.findAll().fetch();
+        var localAccounts = EthAccounts.findAll().fetch();
 
         // if the accounts are different, update the local ones
         _.each(localAccounts, function(account){
             // set status deactivated, if it seem to be gone
             if(!_.contains(accounts, account.address)) {
-                Accounts.updateAll(account._id, {$set: {
+                EthAccounts.updateAll(account._id, {$set: {
                     deactivated: true
                 }});
             } else {
                 web3.eth.getBalance(account.address, function(e, balance){
                     if(!e) {
-                        Accounts.updateAll(account._id, {$set: {
+                        EthAccounts.updateAll(account._id, {$set: {
                             balance: balance.toString(10)
                         }, $unset: {
                             deactivated: ''
@@ -96,7 +99,7 @@ Accounts._addAccounts = function(){
             web3.eth.getBalance(address, function(e, balance){
                 if(!e) {
                     web3.eth.getCoinbase(function(e, coinbase){
-                        Accounts.insert({
+                        EthAccounts.insert({
                             address: address,
                             balance: balance.toString(10),
                             name: (address === coinbase) ? 'Coinbase' : address
@@ -107,10 +110,10 @@ Accounts._addAccounts = function(){
         });
     });
 };
-Accounts._find = Accounts.find;
-Accounts._findOne = Accounts.findOne;
-Accounts._update = Accounts.update;
-// Accounts._remove = Accounts.remove;
+EthAccounts._find = EthAccounts.find;
+EthAccounts._findOne = EthAccounts.findOne;
+EthAccounts._update = EthAccounts.update;
+// EthAccounts._remove = EthAccounts.remove;
 
 
 /**
@@ -120,7 +123,7 @@ Builds the query with the addition of "{deactivated: {$exists: false}}"
 @param {Mixed} arg
 @return {Object} The query
 */
-Accounts._addToQuery = function(args){
+EthAccounts._addToQuery = function(args){
     var args = Array.prototype.slice.call(args);
 
     if(_.isObject(args[0]))
@@ -139,7 +142,7 @@ Find all accounts, besides the deactivated ones
 @method find
 @return {Object} cursor
 */
-Accounts.find = function(){    
+EthAccounts.find = function(){    
     return this._find.apply(this, this._addToQuery(arguments));
 };
 
@@ -149,7 +152,7 @@ Find one accounts, besides the deactivated ones
 @method findOne
 @return {Object} cursor
 */
-Accounts.findOne = function(){
+EthAccounts.findOne = function(){
     return this._findOne.apply(this, this._addToQuery(arguments));
 };
 
@@ -159,7 +162,7 @@ Find all accounts, including the deactivated ones
 @method findAll
 @return {Object} cursor
 */
-Accounts.findAll = Accounts._find;
+EthAccounts.findAll = EthAccounts._find;
 
 /**
 Update accounts, besides the deactivated ones
@@ -167,7 +170,7 @@ Update accounts, besides the deactivated ones
 @method update
 @return {Object} cursor
 */
-Accounts.update = function(){
+EthAccounts.update = function(){
     return this._update.apply(this, this._addToQuery(arguments));
 };
 
@@ -177,14 +180,14 @@ Update accounts, including the deactivated ones
 @method updateAll
 @return {Object} cursor
 */
-Accounts.updateAll = Accounts._update;
+EthAccounts.updateAll = EthAccounts._update;
 
 /**
 Starts fetching and watching the accounts
 
 @method init
 */
-Accounts.init = function(){
+EthAccounts.init = function(){
     var _this = this;
 
     Tracker.nonreactive(function(){
