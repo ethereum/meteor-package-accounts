@@ -64,50 +64,52 @@ EthAccounts._addAccounts = function(){
 
     // UPDATE normal accounts on start
     web3.eth.getAccounts(function(e, accounts){
-        var visibleAccounts = _.pluck(EthAccounts.find().fetch(), 'address');
+        if(!e) {
+            var visibleAccounts = _.pluck(EthAccounts.find().fetch(), 'address');
 
-        if(!_.isEmpty(accounts) &&
-            _.difference(accounts, visibleAccounts).length === 0 &&
-            _.difference(visibleAccounts, accounts).length === 0)
-            return;
+            if(!_.isEmpty(accounts) &&
+                _.difference(accounts, visibleAccounts).length === 0 &&
+                _.difference(visibleAccounts, accounts).length === 0)
+                return;
 
-        var localAccounts = EthAccounts.findAll().fetch();
+            var localAccounts = EthAccounts.findAll().fetch();
 
-        // if the accounts are different, update the local ones
-        _.each(localAccounts, function(account){
-            // set status deactivated, if it seem to be gone
-            if(!_.contains(accounts, account.address)) {
-                EthAccounts.updateAll(account._id, {$set: {
-                    deactivated: true
-                }});
-            } else {
-                web3.eth.getBalance(account.address, function(e, balance){
-                    if(!e) {
-                        EthAccounts.updateAll(account._id, {$set: {
-                            balance: balance.toString(10)
-                        }, $unset: {
-                            deactivated: ''
-                        }});
-                    }
-                });
-            }
-
-            accounts = _.without(accounts, account.address);
-        });
-        // ADD missing accounts
-        _.each(accounts, function(address){
-            web3.eth.getBalance(address, function(e, balance){
-                if(!e) {
-                    web3.eth.getCoinbase(function(e, coinbase){
-                        EthAccounts.insert({
-                            address: address,
-                            balance: balance.toString(10),
-                            name: (address === coinbase) ? 'Coinbase' : address
-                        });
+            // if the accounts are different, update the local ones
+            _.each(localAccounts, function(account){
+                // set status deactivated, if it seem to be gone
+                if(!_.contains(accounts, account.address)) {
+                    EthAccounts.updateAll(account._id, {$set: {
+                        deactivated: true
+                    }});
+                } else {
+                    web3.eth.getBalance(account.address, function(e, balance){
+                        if(!e) {
+                            EthAccounts.updateAll(account._id, {$set: {
+                                balance: balance.toString(10)
+                            }, $unset: {
+                                deactivated: ''
+                            }});
+                        }
                     });
                 }
+
+                accounts = _.without(accounts, account.address);
             });
-        });
+            // ADD missing accounts
+            _.each(accounts, function(address){
+                web3.eth.getBalance(address, function(e, balance){
+                    if(!e) {
+                        web3.eth.getCoinbase(function(e, coinbase){
+                            EthAccounts.insert({
+                                address: address,
+                                balance: balance.toString(10),
+                                name: (address === coinbase) ? 'Coinbase' : address
+                            });
+                        });
+                    }
+                });
+            });
+        }
     });
 };
 EthAccounts._find = EthAccounts.find;
