@@ -16,7 +16,7 @@ EthAccounts = new Mongo.Collection('ethereum_accounts', {connection: null});
 new PersistentMinimongo(EthAccounts);
 
 
-EthAccounts.watching = false;
+EthAccounts._watching = false;
 
 /**
 Updates the accounts balances, by watching for new blocks and checking the balance.
@@ -26,13 +26,12 @@ Updates the accounts balances, by watching for new blocks and checking the balan
 EthAccounts._watchBalance = function(){
     var _this = this;
 
-    this.watching = true;
+    this._watching = true;
 
     // UPDATE SIMPLE ACCOUNTS balance on each new block
     web3.eth.filter('latest').watch(function(e, res){
         if(!e) {
             _this._updateBalance();
-            _this._addAccounts();
         }
     });
 };
@@ -67,10 +66,12 @@ EthAccounts._addAccounts = function(){
         if(!e) {
             var visibleAccounts = _.pluck(EthAccounts.find().fetch(), 'address');
 
+
             if(!_.isEmpty(accounts) &&
                 _.difference(accounts, visibleAccounts).length === 0 &&
                 _.difference(visibleAccounts, accounts).length === 0)
                 return;
+
 
             var localAccounts = EthAccounts.findAll().fetch();
 
@@ -82,19 +83,14 @@ EthAccounts._addAccounts = function(){
                         deactivated: true
                     }});
                 } else {
-                    web3.eth.getBalance(account.address, function(e, balance){
-                        if(!e) {
-                            EthAccounts.updateAll(account._id, {$set: {
-                                balance: balance.toString(10)
-                            }, $unset: {
-                                deactivated: ''
-                            }});
-                        }
-                    });
+                    EthAccounts.updateAll(account._id, {$unset: {
+                        deactivated: ''
+                    }});
                 }
 
                 accounts = _.without(accounts, account.address);
             });
+
             // ADD missing accounts
             _.each(accounts, function(address){
                 web3.eth.getBalance(address, function(e, balance){
@@ -196,14 +192,15 @@ EthAccounts.init = function(){
 
         _this._addAccounts();
 
-        if(!_this.watching) {
+        if(!_this._watching) {
             _this._updateBalance();
             _this._watchBalance();
-        }
 
-        // check for new accounts every 2s
-        setInterval(function(){
-            _this._addAccounts();
-        }, 2000);
+            // check for new accounts every 2s
+            Meteor.clearInterval(_this._intervalId);
+            _this._intervalId = Meteor.setInterval(function(){
+                _this._addAccounts();
+            }, 2000);
+        }
     });
 };
