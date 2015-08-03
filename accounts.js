@@ -12,8 +12,11 @@ The accounts collection, with some ethereum additions.
 @constructor
 */
 
+
 EthAccounts = new Mongo.Collection('ethereum_accounts', {connection: null});
-new PersistentMinimongo(EthAccounts);
+
+if(typeof PersistentMinimongo !== 'undefined')
+    new PersistentMinimongo(EthAccounts);
 
 
 EthAccounts._watching = false;
