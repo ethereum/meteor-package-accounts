@@ -63,6 +63,7 @@ if its finds a difference between the accounts in the collection and the account
 @method _addAccounts
 */
 EthAccounts._addAccounts = function(){
+    var _this = this;
 
     // UPDATE normal accounts on start
     web3.eth.getAccounts(function(e, accounts){
@@ -102,11 +103,15 @@ EthAccounts._addAccounts = function(){
                             EthAccounts.insert({
                                 address: address,
                                 balance: balance.toString(10),
-                                name: (address === coinbase) ? 'Coinbase' : address
+                                name: (address === coinbase) ? 'Etherbase' : 'Account '+ _this._accountCount
                             });
+
+                            if(address !== coinbase)
+                                _this._accountCount++;
                         });
                     }
                 });
+
             });
         }
     });
@@ -190,6 +195,8 @@ Starts fetching and watching the accounts
 */
 EthAccounts.init = function(){
     var _this = this;
+
+    this._accountCount = 1;
 
     Tracker.nonreactive(function(){
 
