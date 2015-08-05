@@ -101,6 +101,7 @@ EthAccounts._addAccounts = function(){
                     if(!e) {
                         web3.eth.getCoinbase(function(e, coinbase){
                             EthAccounts.insert({
+                                type: 'account',
                                 address: address,
                                 balance: balance.toString(10),
                                 name: (address === coinbase) ? 'Etherbase' : 'Account '+ _this._accountCount
