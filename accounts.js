@@ -96,7 +96,9 @@ EthAccounts._addAccounts = function(){
             });
 
             // ADD missing accounts
+            var accountsCount = visibleAccounts.length + 1;
             _.each(accounts, function(address){
+
                 web3.eth.getBalance(address, function(e, balance){
                     if(!e) {
                         web3.eth.getCoinbase(function(e, coinbase){
@@ -104,11 +106,11 @@ EthAccounts._addAccounts = function(){
                                 type: 'account',
                                 address: address,
                                 balance: balance.toString(10),
-                                name: (address === coinbase) ? 'Etherbase' : 'Account '+ _this._accountCount
+                                name: (address === coinbase) ? 'Etherbase' : 'Account '+ accountsCount
                             });
 
                             if(address !== coinbase)
-                                _this._accountCount++;
+                                accountsCount++;
                         });
                     }
                 });
@@ -196,8 +198,6 @@ Starts fetching and watching the accounts
 */
 EthAccounts.init = function(){
     var _this = this;
-
-    this._accountCount = 1;
 
     Tracker.nonreactive(function(){
 
