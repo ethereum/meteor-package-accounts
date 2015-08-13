@@ -45,10 +45,10 @@ Updates the accounts balances.
 @method _updateBalance
 */
 EthAccounts._updateBalance = function(){
-    _.each(EthAccounts.findAll().fetch(), function(account){
+    _.each(EthAccounts.find().fetch(), function(account){
         web3.eth.getBalance(account.address, function(err, res){
             if(!err) {
-                EthAccounts.updateAll(account._id, {$set: {
+                EthAccounts.update(account._id, {$set: {
                     balance: res.toString(10)
                 }});
             }
