@@ -215,3 +215,16 @@ EthAccounts.init = function(){
         }
     });
 };
+
+
+/**
+Overwrite web3.reset, to also stop the interval
+
+@method web3.reset
+*/
+web3._reset = web3.reset;
+web3.reset = function(){
+    Meteor.clearInterval(EthAccounts._intervalId);
+    EthAccounts._watching = false;
+    web3._reset();
+};
