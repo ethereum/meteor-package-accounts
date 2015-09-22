@@ -81,6 +81,11 @@ EthAccounts._addAccounts = function(){
 
             // if the accounts are different, update the local ones
             _.each(localAccounts, function(account){
+
+                // needs to have the balance
+                if(!account.balance)
+                    return;
+
                 // set status deactivated, if it seem to be gone
                 if(!_.contains(accounts, account.address)) {
                     EthAccounts.updateAll(account._id, {$set: {
@@ -102,12 +107,20 @@ EthAccounts._addAccounts = function(){
                 web3.eth.getBalance(address, function(e, balance){
                     if(!e) {
                         web3.eth.getCoinbase(function(e, coinbase){
-                            EthAccounts.insert({
-                                type: 'account',
-                                address: address,
-                                balance: balance.toString(10),
-                                name: (address === coinbase) ? 'Etherbase' : 'Account '+ accountsCount
-                            });
+                            var doc = EthAccounts.findAll({address: address}).fetch()[0];
+
+                            var insert = {
+                                    type: 'account',
+                                    address: address,
+                                    balance: balance.toString(10),
+                                    name: (address === coinbase) ? 'Etherbase' : 'Account '+ accountsCount
+                                };
+
+                            if(doc) {
+                                EthAccounts.updateAll({_id: doc._id}, {$set: insert});
+                            } else {
+                                EthAccounts.insert(insert);
+                            }
 
                             if(address !== coinbase)
                                 accountsCount++;
