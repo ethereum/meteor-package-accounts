@@ -11,12 +11,13 @@ The accounts collection, with some ethereum additions.
 @class EthAccounts
 @constructor
 */
+var collection = new Mongo.Collection('ethereum_accounts', {connection: null});
+EthAccounts = _.clone(collection);
+EthAccounts._collection = collection;
 
-
-EthAccounts = new Mongo.Collection('ethereum_accounts', {connection: null});
 
 if(typeof PersistentMinimongo !== 'undefined')
-    new PersistentMinimongo(EthAccounts);
+    new PersistentMinimongo(EthAccounts._collection);
 
 
 EthAccounts._watching = false;
@@ -132,10 +133,7 @@ EthAccounts._addAccounts = function(){
         }
     });
 };
-EthAccounts._find = EthAccounts.find;
-EthAccounts._findOne = EthAccounts.findOne;
-EthAccounts._update = EthAccounts.update;
-// EthAccounts._remove = EthAccounts.remove;
+
 
 
 /**
@@ -158,6 +156,7 @@ EthAccounts._addToQuery = function(args){
     return args;
 };
 
+
 /**
 Find all accounts, besides the deactivated ones
 
@@ -165,17 +164,7 @@ Find all accounts, besides the deactivated ones
 @return {Object} cursor
 */
 EthAccounts.find = function(){    
-    return this._find.apply(this, this._addToQuery(arguments));
-};
-
-/**
-Find one accounts, besides the deactivated ones
-
-@method findOne
-@return {Object} cursor
-*/
-EthAccounts.findOne = function(){
-    return this._findOne.apply(this, this._addToQuery(arguments));
+    return this._collection.find.apply(this, this._addToQuery(arguments));
 };
 
 /**
@@ -184,7 +173,17 @@ Find all accounts, including the deactivated ones
 @method findAll
 @return {Object} cursor
 */
-EthAccounts.findAll = EthAccounts._find;
+EthAccounts.findAll = EthAccounts._collection.find;
+
+/**
+Find one accounts, besides the deactivated ones
+
+@method findOne
+@return {Object} cursor
+*/
+EthAccounts.findOne = function(){
+    return this._collection.findOne.apply(this, this._addToQuery(arguments));
+};
 
 /**
 Update accounts, besides the deactivated ones
@@ -193,7 +192,7 @@ Update accounts, besides the deactivated ones
 @return {Object} cursor
 */
 EthAccounts.update = function(){
-    return this._update.apply(this, this._addToQuery(arguments));
+    return this._collection.update.apply(this, this._addToQuery(arguments));
 };
 
 /**
@@ -202,7 +201,15 @@ Update accounts, including the deactivated ones
 @method updateAll
 @return {Object} cursor
 */
-EthAccounts.updateAll = EthAccounts._update;
+EthAccounts.updateAll = EthAccounts._collection.update;
+
+/**
+Update accounts, including the deactivated ones
+
+@method upsert
+@return {Object} cursor
+*/
+EthAccounts.upsert = EthAccounts._collection.upsert;
 
 /**
 Starts fetching and watching the accounts
