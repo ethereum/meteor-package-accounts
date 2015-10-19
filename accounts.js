@@ -219,6 +219,18 @@ Starts fetching and watching the accounts
 EthAccounts.init = function(){
     var _this = this;
 
+    /**
+    Overwrite web3.reset, to also stop the interval
+
+    @method web3.reset
+    */
+    web3._reset = web3.reset;
+    web3.reset = function(keepIsSyncing){
+        Meteor.clearInterval(EthAccounts._intervalId);
+        EthAccounts._watching = false;
+        web3._reset(keepIsSyncing);
+    };
+
     Tracker.nonreactive(function(){
 
         _this._addAccounts();
@@ -234,17 +246,4 @@ EthAccounts.init = function(){
             }, 2000);
         }
     });
-};
-
-
-/**
-Overwrite web3.reset, to also stop the interval
-
-@method web3.reset
-*/
-web3._reset = web3.reset;
-web3.reset = function(keepIsSyncing){
-    Meteor.clearInterval(EthAccounts._intervalId);
-    EthAccounts._watching = false;
-    web3._reset(keepIsSyncing);
 };
