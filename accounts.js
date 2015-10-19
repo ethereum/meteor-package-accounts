@@ -219,6 +219,11 @@ Starts fetching and watching the accounts
 EthAccounts.init = function(){
     var _this = this;
 
+    if(typeof web3 === 'undefined') {
+        console.warn('EthAccounts couldn\'t find web3, please make sure to instantiate a web3 object before calling EthAccounts.init()');
+        return;
+    }
+
     /**
     Overwrite web3.reset, to also stop the interval
 
