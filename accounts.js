@@ -229,10 +229,10 @@ EthAccounts.init = function(){
 
     @method web3.reset
     */
-    web3._reset = web3.reset;
+    web3._reset = Web3.prototype.reset;
     web3.reset = function(keepIsSyncing){
-        Meteor.clearInterval(EthAccounts._intervalId);
-        EthAccounts._watching = false;
+        Meteor.clearInterval(_this._intervalId);
+        _this._watching = false;
         web3._reset(keepIsSyncing);
     };
 
