@@ -1,7 +1,7 @@
 Package.describe({
   name: 'ethereum:accounts',
   summary: 'Provides and updates the ethereum accounts in the Accounts collection',
-  version: '0.3.8',
+  version: '0.3.9',
   git: 'http://github.com/ethereum/meteor-package-accounts'
 });
 
@@ -10,7 +10,7 @@ Package.onUse(function(api) {
   api.use('underscore', ['client', 'server']);
   api.use('mongo', ['client', 'server']);
 
-  api.use('frozeman:persistent-minimongo@0.1.3', 'client');
+  api.use('frozeman:persistent-minimongo@0.1.8', 'client');
   api.use('ethereum:web3@0.15.1', ['client', 'server']);
 
   api.export(['EthAccounts'], ['client', 'server']);
