@@ -114,7 +114,7 @@ EthAccounts._addAccounts = function(){
                                     type: 'account',
                                     address: address,
                                     balance: balance.toString(10),
-                                    name: (address === coinbase) ? 'Etherbase' : 'Account '+ accountsCount
+                                    name: (address === coinbase) ? 'Main account (Etherbase)' : 'Account '+ accountsCount
                                 };
 
                             if(doc) {
