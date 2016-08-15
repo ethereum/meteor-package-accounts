@@ -168,22 +168,25 @@ EthAccounts._addToQuery = function(args, options){
 
     var args = Array.prototype.slice.call(args);
 
-    if(_.isObject(args[0]))
+    if(_.isObject(args[0])) {
         args[0] = _.extend(args[0], {
             network: _this.network,
         });
-    else if(_.isString(args[0]))
+    }
+    else if(_.isString(args[0])) {
         args[0] = {
             network: _this.network,
             _id: args[0], 
         };
-    else
+    }
+    else {
         args[0] = {
             network: _this.network,
         };
+    }
 
     if (!options.includeDeactivated) {
-        args[0] = _.extend({
+        args[0] = _.extend(args[0], {
             deactivated: {$exists: false}
         });
     }
@@ -209,7 +212,7 @@ Find all accounts, including the deactivated ones
 @return {Object} cursor
 */
 EthAccounts.findAll = function() {
-    return this._collection.findAll.apply(this, this._addToQuery(arguments, {
+    return this._collection.find.apply(this, this._addToQuery(arguments, {
         includeDeactivated: true
     }));
 }
@@ -241,7 +244,7 @@ Update accounts, including the deactivated ones
 @return {Object} cursor
 */
 EthAccounts.updateAll = function() {
-    return this._collection.updateAll.apply(this, this._addToQuery(arguments, {
+    return this._collection.update.apply(this, this._addToQuery(arguments, {
         includeDeactivated: true
     }));
 }
@@ -265,7 +268,7 @@ Insert an account
 @return {Object} cursor
 */
 EthAccounts.insert = function(data) {
-    return this._collection.insert.apply(this, _.extend(data, {
+    return this._collection.insert.call(this, _.extend(data, {
         network: this.network,
     }));
 }
@@ -274,9 +277,12 @@ EthAccounts.insert = function(data) {
 /**
 Starts fetching and watching the accounts
 
+@param opts Configuration options
+@param opts.network Unique id of network we're on
+
 @method init
 */
-EthAccounts.init = function(){
+EthAccounts.init = function(opts) {
     var _this = this;
 
     if(typeof web3 === 'undefined') {
@@ -284,8 +290,12 @@ EthAccounts.init = function(){
         return;
     }
 
-    // get genesis block
-    _this.network = web3.eth.getBlock(0).hash;
+    if (!opts.network) {
+        throw new Error('Network id not given');
+    }
+
+    // network id    
+    _this.network = opts.network;
 
     /**
     Overwrite web3.reset, to also stop the interval
