@@ -46,12 +46,18 @@ Updates the accounts balances.
 @method _updateBalance
 */
 EthAccounts._updateBalance = function(){
-    _.each(EthAccounts.find().fetch(), function(account){
+    var _this = this;
+
+    _.each(EthAccounts.find({
+        network: _this.network,
+    }).fetch(), function(account){
         web3.eth.getBalance(account.address, function(err, res){
             if(!err) {
-                EthAccounts.update(account._id, {$set: {
-                    balance: res.toString(10)
-                }});
+                EthAccounts.update(account._id, {
+                    $set: {
+                        balance: res.toString(10)
+                    }
+                });
             }
         });
     });
@@ -89,13 +95,17 @@ EthAccounts._addAccounts = function(){
 
                 // set status deactivated, if it seem to be gone
                 if(!_.contains(accounts, account.address)) {
-                    EthAccounts.updateAll(account._id, {$set: {
-                        deactivated: true
-                    }});
+                    EthAccounts.updateAll(account._id, {
+                        $set: {
+                            deactivated: true
+                        }
+                    });
                 } else {
-                    EthAccounts.updateAll(account._id, {$unset: {
-                        deactivated: ''
-                    }});
+                    EthAccounts.updateAll(account._id, {
+                        $unset: {
+                            deactivated: ''
+                        }
+                    });
                 }
 
                 accounts = _.without(accounts, account.address);
@@ -108,17 +118,21 @@ EthAccounts._addAccounts = function(){
                 web3.eth.getBalance(address, function(e, balance){
                     if(!e) {
                         web3.eth.getCoinbase(function(e, coinbase){
-                            var doc = EthAccounts.findAll({address: address}).fetch()[0];
+                            var doc = EthAccounts.findAll({
+                                address: address,
+                            }).fetch()[0];
 
                             var insert = {
-                                    type: 'account',
-                                    address: address,
-                                    balance: balance.toString(10),
-                                    name: (address === coinbase) ? 'Main account (Etherbase)' : 'Account '+ accountsCount
-                                };
+                                type: 'account',
+                                address: address,
+                                balance: balance.toString(10),
+                                name: (address === coinbase) ? 'Main account (Etherbase)' : 'Account '+ accountsCount
+                            };
 
                             if(doc) {
-                                EthAccounts.updateAll({_id: doc._id}, {$set: insert});
+                                EthAccounts.updateAll(doc._id, {
+                                    $set: insert
+                                });
                             } else {
                                 EthAccounts.insert(insert);
                             }
@@ -141,17 +155,41 @@ Builds the query with the addition of "{deactivated: {$exists: false}}"
 
 @method _addToQuery
 @param {Mixed} arg
+@param {Object} options
+@param {Object} options.includeDeactivated If set then de-activated accounts are also included.
 @return {Object} The query
 */
-EthAccounts._addToQuery = function(args){
+EthAccounts._addToQuery = function(args, options){
+    var _this = this;
+
+    options = _.extend({
+        includeDeactivated: false
+    }, options);
+
     var args = Array.prototype.slice.call(args);
 
-    if(_.isObject(args[0]))
-        args[0] = _.extend(args[0], {deactivated: {$exists: false}});
-    else if(_.isString(args[0]))
-        args[0] = {_id: args[0], deactivated: {$exists: false}};
-    else
-        args[0] = {deactivated: {$exists: false}};
+    if(_.isObject(args[0])) {
+        args[0] = _.extend(args[0], {
+            network: _this.network,
+        });
+    }
+    else if(_.isString(args[0])) {
+        args[0] = {
+            network: _this.network,
+            _id: args[0], 
+        };
+    }
+    else {
+        args[0] = {
+            network: _this.network,
+        };
+    }
+
+    if (!options.includeDeactivated) {
+        args[0] = _.extend(args[0], {
+            deactivated: {$exists: false}
+        });
+    }
 
     return args;
 };
@@ -173,7 +211,11 @@ Find all accounts, including the deactivated ones
 @method findAll
 @return {Object} cursor
 */
-EthAccounts.findAll = EthAccounts._collection.find;
+EthAccounts.findAll = function() {
+    return this._collection.find.apply(this, this._addToQuery(arguments, {
+        includeDeactivated: true
+    }));
+}
 
 /**
 Find one accounts, besides the deactivated ones
@@ -201,7 +243,11 @@ Update accounts, including the deactivated ones
 @method updateAll
 @return {Object} cursor
 */
-EthAccounts.updateAll = EthAccounts._collection.update;
+EthAccounts.updateAll = function() {
+    return this._collection.update.apply(this, this._addToQuery(arguments, {
+        includeDeactivated: true
+    }));
+}
 
 /**
 Update accounts, including the deactivated ones
@@ -209,20 +255,47 @@ Update accounts, including the deactivated ones
 @method upsert
 @return {Object} cursor
 */
-EthAccounts.upsert = EthAccounts._collection.upsert;
+EthAccounts.upsert = function() {
+    return this._collection.upsert.apply(this, this._addToQuery(arguments, {
+        includeDeactivated: true
+    }));
+}
+
+/**
+Insert an account
+
+@method insert
+@return {Object} cursor
+*/
+EthAccounts.insert = function(data) {
+    return this._collection.insert.call(this, _.extend(data, {
+        network: this.network,
+    }));
+}
+
 
 /**
 Starts fetching and watching the accounts
 
+@param opts Configuration options
+@param opts.network Unique id of network we're on
+
 @method init
 */
-EthAccounts.init = function(){
+EthAccounts.init = function(opts) {
     var _this = this;
 
     if(typeof web3 === 'undefined') {
         console.warn('EthAccounts couldn\'t find web3, please make sure to instantiate a web3 object before calling EthAccounts.init()');
         return;
     }
+
+    if (!opts.network) {
+        throw new Error('Network id not given');
+    }
+
+    // network id    
+    _this.network = opts.network;
 
     /**
     Overwrite web3.reset, to also stop the interval
