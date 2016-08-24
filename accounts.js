@@ -290,12 +290,13 @@ EthAccounts.init = function(opts) {
         return;
     }
 
-    if (!opts.network) {
+    if (opts && !opts.network) {
         throw new Error('Network id not given');
+    } else if (opts && opts.network) {
+        // network id    
+        _this.network = opts.network;
     }
 
-    // network id    
-    _this.network = opts.network;
 
     /**
     Overwrite web3.reset, to also stop the interval
