@@ -20,7 +20,6 @@ if(typeof PersistentMinimongo !== 'undefined')
     new PersistentMinimongo(EthAccounts._collection);
 
 
-EthAccounts._watching = false;
 
 /**
 Updates the accounts balances, by watching for new blocks and checking the balance.
@@ -30,10 +29,13 @@ Updates the accounts balances, by watching for new blocks and checking the balan
 EthAccounts._watchBalance = function(){
     var _this = this;
 
-    this._watching = true;
+    if(this.blockSubscription) {
+        this.blockSubscription.stopWatching();
+    }
 
     // UPDATE SIMPLE ACCOUNTS balance on each new block
-    web3.eth.filter('latest').watch(function(e, res){
+    this.blockSubscription = web3.eth.filter('latest');
+    this.blockSubscription.watch(function(e, res){
         if(!e) {
             _this._updateBalance();
         }
@@ -48,14 +50,16 @@ Updates the accounts balances.
 EthAccounts._updateBalance = function(){
     var _this = this;
 
-    _.each(EthAccounts.find({
-        network: _this.network,
-    }).fetch(), function(account){
+    _.each(EthAccounts.find({}).fetch(), function(account){
         web3.eth.getBalance(account.address, function(err, res){
             if(!err) {
+                if(res.toFixed) {
+                    res = res.toFixed();
+                }
+
                 EthAccounts.update(account._id, {
                     $set: {
-                        balance: res.toString(10)
+                        balance: res
                     }
                 });
             }
@@ -117,6 +121,10 @@ EthAccounts._addAccounts = function(){
 
                 web3.eth.getBalance(address, function(e, balance){
                     if(!e) {
+                        if(balance.toFixed) {
+                            balance = balance.toFixed();
+                        }
+
                         web3.eth.getCoinbase(function(e, coinbase){
                             var doc = EthAccounts.findAll({
                                 address: address,
@@ -125,7 +133,7 @@ EthAccounts._addAccounts = function(){
                             var insert = {
                                 type: 'account',
                                 address: address,
-                                balance: balance.toString(10),
+                                balance: balance,
                                 name: (address === coinbase) ? 'Main account (Etherbase)' : 'Account '+ accountsCount
                             };
 
@@ -168,21 +176,13 @@ EthAccounts._addToQuery = function(args, options){
 
     var args = Array.prototype.slice.call(args);
 
-    if(_.isObject(args[0])) {
-        args[0] = _.extend(args[0], {
-            network: _this.network,
-        });
-    }
-    else if(_.isString(args[0])) {
+    if(_.isString(args[0])) {
         args[0] = {
-            network: _this.network,
             _id: args[0], 
         };
     }
-    else {
-        args[0] = {
-            network: _this.network,
-        };
+    else if (!_.isObject(args[0])) {
+        args[0] = {};
     }
 
     if (!options.includeDeactivated) {
@@ -261,28 +261,13 @@ EthAccounts.upsert = function() {
     }));
 }
 
-/**
-Insert an account
-
-@method insert
-@return {Object} cursor
-*/
-EthAccounts.insert = function(data) {
-    return this._collection.insert.call(this, _.extend(data, {
-        network: this.network,
-    }));
-}
-
 
 /**
 Starts fetching and watching the accounts
 
-@param opts Configuration options
-@param opts.network Unique id of network we're on
-
 @method init
 */
-EthAccounts.init = function(opts) {
+EthAccounts.init = function() {
     var _this = this;
 
     if(typeof web3 === 'undefined') {
@@ -290,39 +275,18 @@ EthAccounts.init = function(opts) {
         return;
     }
 
-    if (opts && !opts.network) {
-        throw new Error('Network id not given');
-    } else if (opts && opts.network) {
-        // network id    
-        _this.network = opts.network;
-    }
-
-
-    /**
-    Overwrite web3.reset, to also stop the interval
-
-    @method web3.reset
-    */
-    web3._reset = Web3.prototype.reset;
-    web3.reset = function(keepIsSyncing){
-        Meteor.clearInterval(_this._intervalId);
-        _this._watching = false;
-        web3._reset(keepIsSyncing);
-    };
-
     Tracker.nonreactive(function(){
 
         _this._addAccounts();
 
-        if(!_this._watching) {
-            _this._updateBalance();
-            _this._watchBalance();
+        _this._updateBalance();
+        _this._watchBalance();
 
-            // check for new accounts every 2s
-            Meteor.clearInterval(_this._intervalId);
-            _this._intervalId = Meteor.setInterval(function(){
-                _this._addAccounts();
-            }, 2000);
-        }
+        // check for new accounts every 2s
+        Meteor.clearInterval(_this._intervalId);
+        _this._intervalId = Meteor.setInterval(function(){
+            _this._addAccounts();
+        }, 2000);
+
     });
 };

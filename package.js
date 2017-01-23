@@ -1,7 +1,7 @@
 Package.describe({
   name: 'ethereum:accounts',
   summary: 'Provides and updates the ethereum accounts in the Accounts collection',
-  version: '0.3.12',
+  version: '0.4.0',
   git: 'http://github.com/ethereum/meteor-package-accounts'
 });
 
