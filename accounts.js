@@ -30,7 +30,7 @@ EthAccounts._watchBalance = function(){
     var _this = this;
 
     if(this.blockSubscription) {
-        this.blockSubscription.stopWatching();
+        this.blockSubscription.stopWatching(function(e, res){console.log(e, res);});
     }
 
     // UPDATE SIMPLE ACCOUNTS balance on each new block
