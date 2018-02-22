@@ -30,15 +30,17 @@ EthAccounts._watchBalance = function(){
     var _this = this;
 
     if(this.blockSubscription) {
-        this.blockSubscription.stopWatching();
+        this.blockSubscription.unsubscribe();
     }
 
     // UPDATE SIMPLE ACCOUNTS balance on each new block
-    this.blockSubscription = web3.eth.filter('latest');
-    this.blockSubscription.watch(function(e, res){
-        if(!e) {
-            _this._updateBalance();
+    this.blockSubscription = web3.eth.subscribe('newBlockHeaders', function(error, result) {
+        if (error) {
+            console.warn('newBlockHeaders subscription error: ', error);
+            return;
         }
+
+        _this._updateBalance();
     });
 };
 
@@ -125,7 +127,12 @@ EthAccounts._addAccounts = function(){
                             balance = balance.toFixed();
                         }
 
-                        web3.eth.getCoinbase(function(e, coinbase){
+                        web3.eth.getCoinbase(function(error, coinbase) {
+                            if (error) {
+                                console.warn('getCoinbase error: ', error);
+                                return;
+                            }
+
                             var doc = EthAccounts.findAll({
                                 address: address,
                             }).fetch()[0];
