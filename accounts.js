@@ -130,7 +130,7 @@ EthAccounts._addAccounts = function(){
                         web3.eth.getCoinbase(function(error, coinbase) {
                             if (error) {
                                 console.warn('getCoinbase error: ', error);
-                                return;
+                                coinbase = null; // continue with null coinbase
                             }
 
                             var doc = EthAccounts.findAll({
