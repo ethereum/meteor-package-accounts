@@ -34,12 +34,7 @@ EthAccounts._watchBalance = function(){
     }
 
     // UPDATE SIMPLE ACCOUNTS balance on each new block
-    this.blockSubscription = web3.eth.subscribe('newBlockHeaders', function(error, result) {
-        if (error) {
-            console.warn('newBlockHeaders subscription error: ', error);
-            return;
-        }
-
+    this.blockSubscription = web3.eth.subscribe('newBlockHeaders').on('data', function() {
         _this._updateBalance();
     });
 };
