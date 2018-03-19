@@ -1,21 +1,22 @@
 Package.describe({
-  name: 'ethereum:accounts',
-  summary: 'Provides and updates the ethereum accounts in the Accounts collection',
-  version: '0.4.0',
-  git: 'http://github.com/ethereum/meteor-package-accounts'
+  name: "ethereum:accounts",
+  summary:
+    "Provides and updates the ethereum accounts in the Accounts collection",
+  version: "1.0.0",
+  git: "http://github.com/ethereum/meteor-package-accounts"
 });
 
 Package.onUse(function(api) {
-  api.versionsFrom('1.0');
-  api.use('underscore', ['client', 'server']);
-  api.use('mongo', ['client', 'server']);
+  api.versionsFrom("1.0");
+  api.use("underscore", ["client", "server"]);
+  api.use("mongo", ["client", "server"]);
 
-  api.use('frozeman:persistent-minimongo@0.1.8', 'client');
-  api.use('ethereum:web3@0.15.1', ['client', 'server']);
+  api.use("frozeman:persistent-minimongo@0.1.8", "client");
+  api.use("ethereum:web3@1.0.0-beta.30", ["client", "server"]);
 
-  api.export(['EthAccounts'], ['client', 'server']);
+  api.export(["EthAccounts"], ["client", "server"]);
 
-  api.addFiles('accounts.js', ['client', 'server']);
+  api.addFiles("accounts.js", ["client", "server"]);
 });
 
 // Package.onTest(function(api) {
@@ -23,4 +24,3 @@ Package.onUse(function(api) {
 //   api.use('ethereum:accounts');
 //   api.addFiles('accounts-tests.js');
 // });
-

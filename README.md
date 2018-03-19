@@ -64,7 +64,6 @@ var allAccounts = EthAccounts.findAll().fetch();
     "deactivated": true
   }
 ]
-
 ```
 
 #### If you want to update a deactivated account use:
@@ -76,5 +75,8 @@ EthAccounts.updateAll({address: "0x990ccf8a0de58091c028d6ff76bb235ee67c1c39"}, {
 #### If you manually want to activate an account to make it visible call:
 
 ```js
-EthAccounts.updateAll({address: "0x990ccf8a0de58091c028d6ff76bb235ee67c1c39"}, {$unset: {deactivated: ''}})
+EthAccounts.updateAll(
+  { address: "0x990ccf8a0de58091c028d6ff76bb235ee67c1c39" },
+  { $unset: { deactivated: "" } }
+);
 ```
